@@ -45,6 +45,4 @@ node_modules
 .gitignore
 README.md
 npm-debug.log
-Dockerfile
-docker-compose*.yml
 .env*
