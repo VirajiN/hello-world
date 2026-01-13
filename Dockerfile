@@ -6,13 +6,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # ---- Dependencies ----
 FROM base AS deps
 COPY package.json package-lock.json* ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/api/package.json apps/api/package.json
 RUN npm ci
 
 # ---- Build ----
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run -w apps/web build
 
 # ---- Run (small, production) ----
 FROM node:20-alpine AS runner
@@ -25,10 +27,10 @@ ENV PORT=3000
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 
 # Copy standalone build output
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 
 USER nextjs
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
